@@ -35,7 +35,9 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+- Had difficulties with my IDE not creating the right files
+- My IDE was not creating the right code templates
+- Was difficult understanding how each part connected with the next until everything was built out
 
 ## License
 
@@ -52,4 +54,3 @@ Describe any challenges encountered while building the app.
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-{"mode":"full","isActive":false}
