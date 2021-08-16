@@ -6,10 +6,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // Responsible for taking data from model and displaying it as a row in the recycler view
@@ -23,11 +25,11 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
         void onItemLongClicked(int position);
     }
 
-    List<String> items;
+    ArrayList<TodoItem> items;
     OnLongClickListener longClickListener;
     OnClickListener clickListener;
 
-    public ItemsAdapter(List<String> items, OnLongClickListener longClickListener, OnClickListener clickListener) {
+    public ItemsAdapter(ArrayList<TodoItem> items, OnLongClickListener longClickListener, OnClickListener clickListener) {
         this.items = items;
         this.longClickListener = longClickListener;
         this.clickListener = clickListener;
@@ -46,7 +48,7 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull ItemsAdapter.ViewHolder holder, int position) {
         // Grab item at position
-        String item = items.get(position);
+        TodoItem item = items.get(position);
         // Bind item to a specified viewHolder
         holder.bind(item);
     }
@@ -61,22 +63,26 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvItem;
+        CardView cardItemContainer;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvItem = itemView.findViewById(R.id.tvTodoItem);
+            cardItemContainer = itemView.findViewById(R.id.cardItemContainer);
         }
 
         // Update view inside view holder with this data
-        public void bind(String item) {
-            tvItem.setText(item);
-            tvItem.setOnClickListener(new View.OnClickListener() {
+        public void bind(TodoItem item) {
+            String itemName = item.getName();
+
+            tvItem.setText(itemName);
+            cardItemContainer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     clickListener.onItemClicked(getAdapterPosition());
                 }
             });
-            tvItem.setOnLongClickListener(new View.OnLongClickListener() {
+            cardItemContainer.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     // Notifying listener which position was long pressed

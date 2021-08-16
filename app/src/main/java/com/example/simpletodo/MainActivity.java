@@ -15,11 +15,14 @@ import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int EDIT_TEXT_CODE = 20;
 
 
-    List<String> items;
+    ArrayList<TodoItem> items;
 
     Button btnAdd;
     EditText etItem;
@@ -64,7 +67,9 @@ public class MainActivity extends AppCompatActivity {
                 // Create new activity
                 Intent i = new Intent(MainActivity.this, EditActivity.class);
                 // Pass the data being edited
-                i.putExtra(KEY_ITEM_TEXT, items.get(position));
+                TodoItem itemClicked = items.get(position);
+                String itemName = itemClicked.getName();
+                i.putExtra(KEY_ITEM_TEXT, itemName);
                 i.putExtra(KEY_ITEM_POSITION, position);
                 // Display the activity
                 startActivityForResult(i, EDIT_TEXT_CODE);
@@ -78,9 +83,10 @@ public class MainActivity extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String todoItem = etItem.getText().toString();
+                String newItemName = etItem.getText().toString();
                 // Add item to the model
-                items.add(todoItem);
+                TodoItem newItem = new TodoItem(newItemName);
+                items.add(newItem);
                 // Notify adapter that an item is inserted
                 itemsAdapter.notifyItemInserted(items.size() - 1);
                 etItem.setText("");
@@ -97,11 +103,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == EDIT_TEXT_CODE) {
             // Retrieve updated text value
-            String itemText = data.getStringExtra(KEY_ITEM_TEXT);
+            String editedItemName = data.getStringExtra(KEY_ITEM_TEXT);
             // Extract the original position of the edited item from position key
             int position = data.getExtras().getInt(KEY_ITEM_POSITION);
             // Update model at the right position with new item text
-            items.set(position, itemText);
+            TodoItem editedItem = items.get(position);
+            editedItem.setName(editedItemName);
             // Notify adapter
             itemsAdapter.notifyItemChanged(position);
             // Persist changes
@@ -119,7 +126,19 @@ public class MainActivity extends AppCompatActivity {
     // This function will load items by reading every line of data.txt
     private void loadItems() {
         try {
-            items = new ArrayList<>(FileUtils.readLines(getDataFile(), Charset.defaultCharset()));
+            ArrayList<TodoItem> dataFileItems = new ArrayList<>();
+            File dataFile = getDataFile();
+            Scanner scanner = new Scanner(dataFile);
+            while(scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+
+                String itemName = line;
+                TodoItem item = new TodoItem(itemName);
+
+                dataFileItems.add(item);
+            }
+            scanner.close();
+            items = dataFileItems;
         } catch (IOException e) {
             Log.e("MainActivity", "Error reading items", e);
             items = new ArrayList<>();
@@ -128,7 +147,15 @@ public class MainActivity extends AppCompatActivity {
     // This function saves items by writing into data.txt
     private void saveItems() {
         try {
-            FileUtils.writeLines(getDataFile(), items);
+            File dataFile = getDataFile();
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(dataFile));
+            for (TodoItem item : items) {
+                String itemName = item.getName();
+
+                bufferedWriter.write(itemName);
+                bufferedWriter.newLine();
+            }
+            bufferedWriter.close();
         } catch (IOException e) {
             Log.e("MainActivity", "Error writing items", e);
         }
