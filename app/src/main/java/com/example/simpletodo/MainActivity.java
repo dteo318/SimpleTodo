@@ -5,13 +5,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 
 import org.apache.commons.io.FileUtils;
 
@@ -20,11 +26,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
+import java.util.TimeZone;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
     public static final String KEY_ITEM_TEXT = "item_text";
     public static final String KEY_ITEM_POSITION = "item_position";
@@ -34,9 +48,12 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<TodoItem> items;
 
     Button btnAdd;
+    ImageButton btnDueDate;
     EditText etItem;
     RecyclerView rvItems;
     ItemsAdapter itemsAdapter;
+
+    String currentItemDueDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +61,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         btnAdd = findViewById(R.id.btnAdd);
+        btnDueDate = findViewById(R.id.btnDueDate);
         etItem = findViewById(R.id.etItem);
         rvItems = findViewById(R.id.rvItems);
 
         loadItems();
+
+        // Setting the default item due date
+        setDefaultItemDueDate();
 
         ItemsAdapter.OnLongClickListener onLongClickListener = new ItemsAdapter.OnLongClickListener() {
             @Override
@@ -83,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), currentItemDueDate, Toast.LENGTH_SHORT).show();
+
+                Date newItemDueDate = parseDueDate(currentItemDueDate);
                 String newItemName = etItem.getText().toString();
                 // Add item to the model
                 TodoItem newItem = new TodoItem(newItemName);
@@ -92,8 +116,30 @@ public class MainActivity extends AppCompatActivity {
                 etItem.setText("");
                 Toast.makeText(getApplicationContext(), "Item was added", Toast.LENGTH_SHORT).show();
                 saveItems();
+                setDefaultItemDueDate();
             }
         });
+
+        btnDueDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePickerDialog();
+            }
+        });
+    }
+
+    private void setDefaultItemDueDate() {
+        currentItemDueDate = (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-" + (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) + 1) + "-" + Calendar.getInstance().get(Calendar.YEAR);
+    }
+
+    private Date parseDueDate(String dateString) {
+        int month, day, year;
+        month = Integer.parseInt(dateString.split("-")[0]);
+        day = Integer.parseInt(dateString.split("-")[1]);
+        year = Integer.parseInt(dateString.split("-")[2]);
+
+        Calendar calendar = new GregorianCalendar(year, month, day);
+        return calendar.getTime();
     }
 
     // Handle result of edit activity
@@ -159,5 +205,21 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Log.e("MainActivity", "Error writing items", e);
         }
+    }
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        currentItemDueDate = (month + 1) + "-" + dayOfMonth + "-" + year;
+    }
+
+    private void showDatePickerDialog() {
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                this,
+                Calendar.getInstance().get(Calendar.YEAR),
+                Calendar.getInstance().get(Calendar.MONTH),
+                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+        );
+        datePickerDialog.show();
     }
 }
