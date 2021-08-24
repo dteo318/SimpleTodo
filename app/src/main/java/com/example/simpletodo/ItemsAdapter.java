@@ -1,5 +1,6 @@
 package com.example.simpletodo;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,10 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-import java.util.List;
 
 // Responsible for taking data from model and displaying it as a row in the recycler view
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> {
@@ -62,20 +60,23 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
     // Container to provide easy access to views that represent each row of the list
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvItem;
+        TextView tvItem, tvItemDate;
         CardView cardItemContainer;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvItem = itemView.findViewById(R.id.tvTodoItem);
+            tvItem = itemView.findViewById(R.id.tvTodoItemName);
+            tvItemDate = itemView.findViewById(R.id.tvTodoItemDate);
             cardItemContainer = itemView.findViewById(R.id.cardItemContainer);
         }
 
         // Update view inside view holder with this data
         public void bind(TodoItem item) {
             String itemName = item.getName();
+            String itemDateString = item.getDateString();
 
             tvItem.setText(itemName);
+            tvItemDate.setText(itemDateString);
             cardItemContainer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

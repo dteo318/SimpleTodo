@@ -31,6 +31,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -41,9 +42,9 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
     public static final String KEY_ITEM_TEXT = "item_text";
+    public static final String KEY_ITEM_DATE_STRING = "item_date";
     public static final String KEY_ITEM_POSITION = "item_position";
     public static final int EDIT_TEXT_CODE = 20;
-
 
     ArrayList<TodoItem> items;
 
@@ -90,7 +91,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 // Pass the data being edited
                 TodoItem itemClicked = items.get(position);
                 String itemName = itemClicked.getName();
+                String itemDate = itemClicked.getDateString();
                 i.putExtra(KEY_ITEM_TEXT, itemName);
+                i.putExtra(KEY_ITEM_DATE_STRING, itemDate);
                 i.putExtra(KEY_ITEM_POSITION, position);
                 // Display the activity
                 startActivityForResult(i, EDIT_TEXT_CODE);
@@ -104,17 +107,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), currentItemDueDate, Toast.LENGTH_SHORT).show();
-
-                Date newItemDueDate = parseDueDate(currentItemDueDate);
+                Date newItemDueDate = TodoItem.parseDateString(currentItemDueDate);
                 String newItemName = etItem.getText().toString();
                 // Add item to the model
-                TodoItem newItem = new TodoItem(newItemName);
+                TodoItem newItem = new TodoItem(newItemName, newItemDueDate);
                 items.add(newItem);
                 // Notify adapter that an item is inserted
                 itemsAdapter.notifyItemInserted(items.size() - 1);
                 etItem.setText("");
                 Toast.makeText(getApplicationContext(), "Item was added", Toast.LENGTH_SHORT).show();
+                // Sorting items by date
+                Collections.sort(items);
+                itemsAdapter.notifyDataSetChanged();
+                // Persisting todoItems
                 saveItems();
                 setDefaultItemDueDate();
             }
@@ -132,16 +137,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         currentItemDueDate = (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-" + (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) + 1) + "-" + Calendar.getInstance().get(Calendar.YEAR);
     }
 
-    private Date parseDueDate(String dateString) {
-        int month, day, year;
-        month = Integer.parseInt(dateString.split("-")[0]);
-        day = Integer.parseInt(dateString.split("-")[1]);
-        year = Integer.parseInt(dateString.split("-")[2]);
-
-        Calendar calendar = new GregorianCalendar(year, month, day);
-        return calendar.getTime();
-    }
-
     // Handle result of edit activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -150,13 +145,18 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         if (resultCode == RESULT_OK && requestCode == EDIT_TEXT_CODE) {
             // Retrieve updated text value
             String editedItemName = data.getStringExtra(KEY_ITEM_TEXT);
+            String editedItemDate = data.getStringExtra(KEY_ITEM_DATE_STRING);
             // Extract the original position of the edited item from position key
             int position = data.getExtras().getInt(KEY_ITEM_POSITION);
             // Update model at the right position with new item text
             TodoItem editedItem = items.get(position);
             editedItem.setName(editedItemName);
+            editedItem.setDate(TodoItem.parseDateString(editedItemDate));
             // Notify adapter
             itemsAdapter.notifyItemChanged(position);
+            // Sorting items by date
+            Collections.sort(items);
+            itemsAdapter.notifyDataSetChanged();
             // Persist changes
             saveItems();
             Toast.makeText(getApplicationContext(), "Item updated successfully!", Toast.LENGTH_SHORT).show();
@@ -178,8 +178,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
 
-                String itemName = line;
-                TodoItem item = new TodoItem(itemName);
+                String itemName = line.split("_")[0];
+                String itemDateString = line.split("_")[1];
+                Toast.makeText(getApplicationContext(), itemDateString, Toast.LENGTH_SHORT).show();
+                Date itemDate = TodoItem.parseDateString(itemDateString);
+
+                TodoItem item = new TodoItem(itemName, itemDate);
 
                 dataFileItems.add(item);
             }
@@ -197,8 +201,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(dataFile));
             for (TodoItem item : items) {
                 String itemName = item.getName();
+                String itemDateString = item.getDateString();
 
-                bufferedWriter.write(itemName);
+                String saveLine = itemName + "_" + itemDateString;
+                bufferedWriter.write(saveLine);
                 bufferedWriter.newLine();
             }
             bufferedWriter.close();
@@ -218,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 this,
                 Calendar.getInstance().get(Calendar.YEAR),
                 Calendar.getInstance().get(Calendar.MONTH),
-                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+                Calendar.getInstance().get(Calendar.DAY_OF_MONTH) + 1
         );
         datePickerDialog.show();
     }
