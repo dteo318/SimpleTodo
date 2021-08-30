@@ -20,10 +20,10 @@ The following **optional** features are implemented:
 
 The following **additional** features are implemented:
 
-* [ ] User can **add completion/due dates** for todo items
+* [x] User can **add completion/due dates** for todo items
 * [ ] User can **prioritize** todo items
-* [ ] Improved the style of todo items using a custom adapter
-* [ ] Improved the UI/UX by including icons, color, spacings and enhancing styling of the app
+* [x] Improved the style of todo items using a custom adapter
+* [x] Improved the UI/UX by including icons, color, spacings and enhancing styling of the app
 
 ## Video Walkthrough
 
